@@ -6,7 +6,6 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
-export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
@@ -40,6 +39,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       EnableWebLive,
+      BufferMultiplier,
     } = body as {
       SiteName: string;
       Announcement: string;
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter: boolean;
       FluidSearch: boolean;
       EnableWebLive: boolean;
+      BufferMultiplier: number;
     };
 
     // 参数校验
@@ -96,6 +97,7 @@ export async function POST(request: NextRequest) {
       DisableYellowFilter,
       FluidSearch,
       EnableWebLive: EnableWebLive ?? false,
+      BufferMultiplier: BufferMultiplier ?? 15,
     };
 
     // 写入数据库

@@ -8,7 +8,6 @@ import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
 import { refreshLiveChannels } from '@/lib/live';
 import { SearchResult } from '@/lib/types';
 
-export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   console.log(request.url);
