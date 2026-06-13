@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const nextConfig = {
-  output: 'standalone',
   eslint: {
     dirs: ['src'],
   },
@@ -10,11 +9,6 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: false,
 
-  experimental: {
-    instrumentationHook: process.env.NODE_ENV === 'production',
-  },
-
-  // Uncoment to add domain whitelist
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -29,51 +23,59 @@ const nextConfig = {
     ],
   },
 
-  webpack(config) {
+  webpack(config, { isServer }) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg')
     );
 
-    config.module.rules.push(
-      // Reapply the existing rule, but only for svg imports ending in ?url
-      {
-        ...fileLoaderRule,
-        test: /\.svg$/i,
-        resourceQuery: /url/, // *.svg?url
-      },
-      // Convert all other *.svg imports to React components
-      {
-        test: /\.svg$/i,
-        issuer: { not: /\.(css|scss|sass)$/ },
-        resourceQuery: { not: /url/ }, // exclude if *.svg?url
-        loader: '@svgr/webpack',
-        options: {
-          dimensions: false,
-          titleProp: true,
+    if (fileLoaderRule) {
+      config.module.rules.push(
+        {
+          ...fileLoaderRule,
+          test: /\.svg$/i,
+          resourceQuery: /url/,
         },
-      }
-    );
+        {
+          test: /\.svg$/i,
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: { not: /url/ },
+          loader: '@svgr/webpack',
+          options: {
+            dimensions: false,
+            titleProp: true,
+          },
+        }
+      );
 
-    // Modify the file loader rule to ignore *.svg, since we have it handled now.
-    fileLoaderRule.exclude = /\.svg$/i;
+      fileLoaderRule.exclude = /\.svg$/i;
+    }
 
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      net: false,
-      tls: false,
-      crypto: false,
+    // Exclude Node.js-only packages from edge bundle
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        net: false,
+        tls: false,
+        crypto: false,
+        fs: false,
+        path: false,
+        stream: false,
+        http: false,
+        https: false,
+        zlib: false,
+      };
+    }
+
+    // Mark Node.js-only packages as external to prevent bundling errors
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@upstash/redis': false,
+      'redis': false,
     };
 
     return config;
   },
 };
 
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-});
-
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;
