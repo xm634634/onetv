@@ -1,8 +1,8 @@
+export const runtime = 'edge';
+
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { promisify } from 'util';
-import { gunzip } from 'zlib';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { configSelfCheck, setCachedConfig } from '@/lib/config';
@@ -10,7 +10,27 @@ import { SimpleCrypto } from '@/lib/crypto';
 import { db } from '@/lib/db';
 
 
-const gunzipAsync = promisify(gunzip);
+async function gunzipAsync(buffer: ArrayBuffer): Promise<string> {
+  const ds = new DecompressionStream('gzip');
+  const writer = ds.writable.getWriter();
+  writer.write(new Uint8Array(buffer));
+  writer.close();
+  const reader = ds.readable.getReader();
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return new TextDecoder().decode(result);
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -59,9 +79,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 解压缩数据
-    const compressedBuffer = Buffer.from(decryptedData, 'base64');
-    const decompressedBuffer = await gunzipAsync(compressedBuffer);
-    const decompressedData = decompressedBuffer.toString();
+    const compressedBuffer = Uint8Array.from(atob(decryptedData), c => c.charCodeAt(0));
+    const decompressedData = await gunzipAsync(compressedBuffer.buffer);
 
     // 解析JSON数据
     let importData: any;

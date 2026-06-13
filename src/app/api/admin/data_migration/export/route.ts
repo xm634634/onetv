@@ -1,8 +1,8 @@
+export const runtime = 'edge';
+
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { promisify } from 'util';
-import { gzip } from 'zlib';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { SimpleCrypto } from '@/lib/crypto';
@@ -10,7 +10,25 @@ import { db } from '@/lib/db';
 import { CURRENT_VERSION } from '@/lib/version';
 
 
-const gzipAsync = promisify(gzip);
+async function gzipAsync(data: string): Promise<Uint8Array> {
+  const encoder = new TextEncoder();
+  const stream = new Blob([encoder.encode(data)]).stream().pipeThrough(new CompressionStream('gzip'));
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -90,8 +108,15 @@ export async function POST(req: NextRequest) {
     // 先压缩数据
     const compressedData = await gzipAsync(jsonData);
 
+    // 将 Uint8Array 转换为 base64
+    let binary = '';
+    for (let i = 0; i < compressedData.length; i++) {
+      binary += String.fromCharCode(compressedData[i]);
+    }
+    const base64Data = btoa(binary);
+
     // 使用提供的密码加密压缩后的数据
-    const encryptedData = SimpleCrypto.encrypt(compressedData.toString('base64'), password);
+    const encryptedData = SimpleCrypto.encrypt(base64Data, password);
 
     // 生成文件名
     const now = new Date();

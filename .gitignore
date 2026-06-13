@@ -43,3 +43,9 @@ sitemap-*.xml
 # generated files
 src/lib/runtime.ts
 public/manifest.json
+.pnpm-store/
+.vercel/
+.next/
+ode_modules/
+*.log
+.wrangler/
