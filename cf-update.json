@@ -1,0 +1,7 @@
+{
+  "build_config": {
+    "build_command": "pnpm install --force && pnpm build && npx @cloudflare/next-on-pages",
+    "destination_dir": ".vercel/output/static",
+    "root_dir": ""
+  }
+}

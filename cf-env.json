@@ -1,0 +1,30 @@
+{
+  "deployment_configs": {
+    "production": {
+      "env_vars": {
+        "NEXT_PUBLIC_STORAGE_TYPE": {
+          "type": "plain_text",
+          "value": "cloudflare-kv"
+        },
+        "USERNAME": {
+          "type": "plain_text",
+          "value": "admin"
+        },
+        "PASSWORD": {
+          "type": "plain_text",
+          "value": "admin123"
+        }
+      },
+      "kv_namespaces": {
+        "KV": {
+          "namespace_id": "90d1e4f39ef64a0b97f960cac9cb1a12"
+        }
+      },
+      "d1_databases": {
+        "DB": {
+          "id": "8b340e86-5212-45c7-b2b0-040a285d3104"
+        }
+      }
+    }
+  }
+}
