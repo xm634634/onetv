@@ -13,13 +13,6 @@ const STORAGE_TYPE =
     | 'cloudflare-kv'
     | undefined) || 'localstorage';
 
-// Cloudflare KV environment (set by cloudflare functions)
-let cloudflareEnv: any = null;
-
-export function setCloudflareEnv(env: any) {
-  cloudflareEnv = env;
-}
-
 // 创建存储实例
 function createStorage(): IStorage {
   switch (STORAGE_TYPE) {
