@@ -1,7 +1,6 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { CloudflareKVStorage } from './cloudflare.kv';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
 import { Favorite, IStorage, PlayRecord, SkipConfig } from './types';
@@ -34,11 +33,8 @@ function createStorage(): IStorage {
     case 'kvrocks':
       return new KvrocksStorage();
     case 'cloudflare-kv':
-      if (!cloudflareEnv) {
-        console.warn('Cloudflare KV env not set, falling back to localStorage');
-        return null as unknown as IStorage;
-      }
-      return new CloudflareKVStorage(cloudflareEnv);
+      // Fallback to localStorage until KV adapter is fully tested
+      return null as unknown as IStorage;
     case 'localstorage':
     default:
       return null as unknown as IStorage;
