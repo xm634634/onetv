@@ -3,7 +3,7 @@
  * Initializes storage adapter with KV binding
  */
 
-export const onRequest = async (context) => {
+export const onRequest = async (context: any) => {
   if (context.env) {
     const { setCloudflareEnv } = await import('@/lib/db');
     setCloudflareEnv(context.env);
